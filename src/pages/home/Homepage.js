@@ -2,6 +2,9 @@ import React, { useEffect } from "react";
 import "./homepage.css";
 import * as THREE from "three";
 import { NavBar } from "./MainNavBar";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import classObject from "../classroom/models/gltf/class.glb";
+import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 
 export const Homepage = () => {
   useEffect(() => {
@@ -132,8 +135,7 @@ export const Homepage = () => {
     scene.add(camera);
 
     // Controls
-    // const controls = new OrbitControls(camera, canvas)
-    // controls.enableDamping = true
+    const controls = new OrbitControls(camera, canvas);
 
     /**
      * Animate
@@ -155,6 +157,10 @@ export const Homepage = () => {
 
     document.addEventListener("mousemove", onDocumentMouseMove);
 
+    // VR Button
+    // document.body.appendChild( VRButton.createButton(renderer));
+    // renderer.xr.enabled = true;
+    
     const clock = new THREE.Clock();
 
     const tick = () => {
@@ -169,9 +175,6 @@ export const Homepage = () => {
       sphere.rotation.y += 0.5 * (targetX - sphere.rotation.y);
       sphere.rotation.x += 0.05 * (targetY - sphere.rotation.x);
 
-      // Update Orbital Controls
-      // controls.update()
-
       // Render
       renderer.render(scene, camera);
 
@@ -180,6 +183,7 @@ export const Homepage = () => {
     };
 
     tick();
+    
   }, []);
 
   return (
