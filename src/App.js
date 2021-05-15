@@ -4,7 +4,8 @@ import { Homepage } from "./pages/home/Homepage.js";
 import { Classroom } from "./test-lv/Classroom-scene/Classroom.js";
 import "tailwindcss/dist/tailwind.min.css";
 import { Classroom2 } from "./test-lv/test-2-vanilla/test-2-vanilla";
-import Interaction from "./test-lv/object-interaction/interaction";
+import { Interaction } from "./test-lv/object-interaction/interaction";
+import { Physics } from "./test-lv/physics-practice/physics";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/Classroom" component={Classroom} />
         <Route path="/Classroom2" component={Classroom2} />
         <Route path="/Interaction" component={Interaction} />
+        <Route path="/Physics" component={Physics} />
       </Switch>
     </BrowserRouter>
   );

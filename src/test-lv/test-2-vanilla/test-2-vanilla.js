@@ -60,6 +60,13 @@ export const Classroom2 = () => {
       camera.position.set(0, 0, 4);
 
       /**
+       * Adds orbit controls
+       */
+      controls = new OrbitControls(camera, container);
+      controls.target.set(0, 1.6, 0);
+      controls.update();
+
+      /**
        * Creates and sets scene background.
        */
       scene = new THREE.Scene();
@@ -70,6 +77,21 @@ export const Classroom2 = () => {
        */
       ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.3);
       scene.add(ambient);
+
+      /**
+       * Adds a floor to the scene
+       */
+      const floor = new THREE.Mesh(
+        new THREE.PlaneBufferGeometry(200, 200),
+        new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false })
+      );
+      floor.rotation.x = -Math.PI / 2;
+      scene.add(floor);
+
+      var grid = new THREE.GridHelper(200, 40, 0x000000, 0x000000);
+      grid.material.opacity = 0.2;
+      grid.material.transparent = true;
+      scene.add(grid);
 
       /**
        * Adds directional light to the scene
@@ -92,7 +114,7 @@ export const Classroom2 = () => {
       /**
        * For loop to create 2 cubes based on the geometries variable
        */
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < 1; i++) {
         const geometry = geometries;
         const material = new THREE.MeshStandardMaterial({
           color: Math.random() * 0xffffff,
@@ -100,7 +122,7 @@ export const Classroom2 = () => {
 
         const object = new THREE.Mesh(geometry, material);
 
-        object.position.x = Math.random();
+        object.position.x = (1, 1);
         object.position.y = (1, 1);
         object.position.z = (-2, -2);
 
@@ -199,18 +221,21 @@ export const Classroom2 = () => {
       //sets the raycaster direction to the -1 z axis based on the controller's working matrix
       raycaster.ray.direction.set(0, 0, -1).applyMatrix4(workingMatrix);
 
+      if (controller.userData.attachedObject !== undefined) return;
       //Only intersects objects in group
       const intersects = raycaster.intersectObjects(group.children);
 
       //If line intersects with object then the object is highlighted.
       if (intersects.length > 0) {
         intersects[0].object.add(highlight);
-
         highlight.visible = true;
         controller.children[0].scale.z = intersects[0].distance;
         controller.userData.selected = intersects[0].object;
       } else {
         controller.children[0].scale.z = 10;
+      }
+
+      if ((intersects.length = 0)) {
         highlight.visible = false;
       }
     }
