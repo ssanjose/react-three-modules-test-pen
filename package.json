@@ -12,6 +12,7 @@
     "@testing-library/jest-dom": "^5.12.0",
     "@testing-library/react": "^11.2.6",
     "@testing-library/user-event": "^12.8.3",
+    "cannon": "github:schteppe/cannon.js",
     "dat.gui": "^0.7.7",
     "drei": "^2.2.21",
     "react": "^17.0.2",

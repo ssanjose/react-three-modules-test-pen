@@ -1,99 +1,138 @@
-import React, { useEffect } from "react";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import classObject from "../classroom/models/gltf/class.glb";
-import longDeskObject from "../classroom/models/gltf/longdesk.glb";
-import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
-import { NavBar } from "../home/MainNavBar";
+import React, { Suspense, useEffect, useRef, Component } from "react";
+import ReactDOM from "react-dom";
+import { Canvas, useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
+import { VRCanvas, Interactive, DefaultXRControllers } from "@react-three/xr";
+import { XRControllerModelFactory } from "three/examples/jsm/webxr/XRControllerModelFactory.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { BoxLineGeometry } from "three/examples/jsm/geometries/BoxLineGeometry";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
+import * as THREE from "three";
+import * as CANNON from "cannon";
 
 export const Test = () => {
   useEffect(() => {
-    const canvas = document.querySelector("canvas.webgl");
-    const scene = new THREE.Scene();
-    const loader = new GLTFLoader();
-    
-    const sizes = {
-        width: window.innerWidth,
-        height: window.innerHeight,
-    };
-    
-    const camera = new THREE.PerspectiveCamera(
-        75,
-        sizes.width / sizes.height,
-        0.1,
-        100
-    );
-    camera.position.x = 0;
-    camera.position.y = 0;
-    camera.position.z = 2;
-    scene.add(camera);
-    
-    const renderer = new THREE.WebGLRenderer({
-        canvas: canvas
+    var world,
+      mass,
+      body,
+      shape,
+      timeStep = 1 / 60,
+      camera,
+      scene,
+      renderer,
+      geometry,
+      material,
+      mesh,
+      floor,
+      groundBody;
+
+    initThree();
+    initCannon();
+    animate();
+
+    function initCannon() {
+      world = new CANNON.World();
+      world.gravity.set(0, -2, 0);
+      world.broadphase = new CANNON.NaiveBroadphase();
+      world.solver.iterations = 10;
+
+      // Create a plane
+      var groundShape = new CANNON.Plane();
+      groundBody = new CANNON.Body({ mass: 0 });
+      groundBody.addShape(groundShape);
+      groundBody.quaternion.setFromAxisAngle(
+        new CANNON.Vec3(1, 0, 0),
+        -Math.PI / 2
+      );
+      groundBody.position.y = -3;
+      world.addBody(groundBody);
+
+      shape = new CANNON.Box(new CANNON.Vec3(1, 1, 1));
+      mass = 1;
+      body = new CANNON.Body({
+        mass: 1,
       });
-        
-    // Controls
-    const controls = new OrbitControls(camera, canvas);
-    
-    //Create a PointLight and turn on shadows for the light
-    const light = new THREE.PointLight( 0xffffff, 1, 100 );
-    light.position.set( 0, 10, 0 );
-    light.castShadow = true; // default false
-    scene.add( light );
+      body.angularVelocity.set(0, 0, 10);
+      body.position.y = 2;
+      body.addShape(shape);
+      body.angularDamping = 0.5;
+      world.addBody(body);
+    }
 
-    //Set up shadow properties for the light
-    light.shadow.mapSize.width = 512; // default
-    light.shadow.mapSize.height = 512; // default
-    light.shadow.camera.near = 0.5; // default
-    light.shadow.camera.far = 500; // default
-    
-    //Create a sphere that cast shadows (but does not receive them)
-    const sphereGeometry = new THREE.SphereGeometry( 5, 32, 32 );
-    const sphereMaterial = new THREE.MeshStandardMaterial( { color: 0xff0000 } );
-    const sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-    sphere.castShadow = true; //default is false
-    sphere.receiveShadow = false; //default
+    function initThree() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x808080);
 
-    let model = new THREE.Group();
+      camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        1,
+        100
+      );
+      camera.position.z = 5;
+      scene.add(camera);
 
-    loader.load(longDeskObject, result => {
-        model = result.scene;
-        
-        scene.add(model);
-        model.traverse(
-            function (node) {
-                node.castShadow = true;
-            }
-        )
-    });
+      scene.add(new THREE.HemisphereLight(0x808080, 0x606060));
 
-    //Create a plane that receives shadows (but does not cast them)
-    const planeGeometry = new THREE.PlaneGeometry( 20, 20, 32, 32 );
-    const planeMaterial = new THREE.MeshStandardMaterial( { color: 0x00ff00 } )
-    const plane = new THREE.Mesh( planeGeometry, planeMaterial );
-    plane.receiveShadow = true;
-    plane.rotation.x = -Math.PI / 2;
-    plane.position.y = -5;
-    scene.add( plane );
-    
-    renderer.setSize(sizes.width, sizes.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
-    
-    renderer.setAnimationLoop( function () {
-        renderer.render(scene, camera);
-      })
-    
-}, []);
+      const light = new THREE.DirectionalLight(0xffffff);
+      light.position.set(0, 6, 0);
+      light.castShadow = true;
+      light.shadow.camera.top = 2;
+      light.shadow.camera.bottom = -2;
+      light.shadow.camera.right = 2;
+      light.shadow.camera.left = -2;
+      light.shadow.mapSize.set(4096, 4096);
+      scene.add(light);
 
-return (
-    <div className="hero">
-      <NavBar />
-      <div className="hero-container">
-        <canvas className="webgl"></canvas>
-      </div>
-    </div>
-  );
+      geometry = new THREE.BoxGeometry(2, 2, 2);
+      material = new THREE.MeshBasicMaterial({
+        color: 0xff0000,
+      });
+
+      mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+
+      const floorGeometry = new THREE.PlaneGeometry(4, 4);
+      const floorMaterial = new THREE.MeshStandardMaterial({
+        color: 0xeeeeee,
+        roughness: 1.0,
+        metalness: 0.0,
+      });
+      floor = new THREE.Mesh(floorGeometry, floorMaterial);
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      document.body.appendChild(renderer.domElement);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      updatePhysics();
+      render();
+    }
+
+    function updatePhysics() {
+      // Step the physics world
+      world.step(timeStep);
+
+      // Copy coordinates from Cannon.js to Three.js
+      mesh.position.copy(body.position);
+      mesh.quaternion.copy(body.quaternion);
+      floor.position.copy(groundBody.position);
+      floor.quaternion.copy(groundBody.quaternion);
+    }
+
+    function render() {
+      renderer.render(scene, camera);
+    }
+  }, []);
+
+  return null;
 };
