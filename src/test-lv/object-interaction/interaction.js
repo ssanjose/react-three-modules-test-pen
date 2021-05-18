@@ -9,6 +9,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { BoxLineGeometry } from "three/examples/jsm/geometries/BoxLineGeometry";
 import * as THREE from "three";
 import "../classroom.css";
+import * as CANNON from "cannon";
 
 export const Interaction = () => {
   useEffect(() => {
@@ -18,6 +19,7 @@ export const Interaction = () => {
     let controllerGrip1, controllerGrip2;
     let highlight;
     let controls, group;
+    let world, dt;
 
     let raycaster = new THREE.Raycaster();
     let workingMatrix = new THREE.Matrix4();
